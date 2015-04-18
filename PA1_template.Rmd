@@ -7,101 +7,19 @@ output:
 
 
 ## Loading and preprocessing the data
-Load the data first:
 
-```{r}
-data <- read.csv("activity.csv")
-```
 
 
 ## What is mean total number of steps taken per day?
-Now, summarize and create a histogram of the number of a strangers steps per day over a two month period, ignoring na values:
 
-```{r}
-sumDate <- aggregate(steps ~ date, data, sum, na.rm = TRUE)
-steps <- sumDate$steps
-hist(steps)
-```
-
-The mean number of steps per day is:
-
-```{r}
-mean(steps)
-```
-
-The median number of steps per day is:
-```{r}
-median(steps)
-```
 
 
 ## What is the average daily activity pattern?
-Now let's look at the average activity pattern calculate the average number of steps per interval, across all days: 
-```{r}
-avgInt <-aggregate(steps ~ interval, data, mean, na.rm = TRUE)
-```
-Here is a time series plot of average steps per interval:
-```{r}
-interval <- avgInt$interval
-steps <- avgInt$steps
-plot(interval, steps, type = "l")
-```
 
-
-And the interval with the most steps taken can be calculated:
-```{r}
-avgInt[which(avgInt$steps == max(avgInt$steps)),1]
-```
 
 
 ## Imputing missing values
-Next, on to deal with the missing values.
-First, a calculation of how many values are missing:
-```{r}
-length(which(is.na(data$steps)))
-```
-
-I'll use dplyr to replace the missing values in the steps with the mean value of the interval
-```{r}
-library(dplyr)
-newdata <-data %>%
-  group_by(interval) %>%
-  mutate(steps = replace(steps, is.na(steps),mean(steps, na.rm = TRUE)))
-```
-And, now create a histogram of this new dataset with the missing values filled in:
-```{r}
-sumDateRevised <- aggregate(steps ~ date, newdata, sum)
-RevisedSteps <- sumDateRevised$steps
-hist(RevisedSteps)
-```
-
-The mean of the new dataset is:
-```{r}
-mean(RevisedSteps)
-```
-And the median of the new dataset is:
-```{r}
-median(RevisedSteps)
-```
-
-The mean stays the same as it was in the dataset with the na values, but the median changes, to become the same value as the mean.
 
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
-Now to create a new factor for weekend or weekday:
-
-```{r}
-a <-c("Saturday","Sunday")
-lastdata <-mutate(newdata, whatday= ifelse(weekdays(as.Date(date)) %in% a, "weekend", "weekday"))
-print(head(lastdata))
-```
-
-The time series plot averaged across weekdays or weekends:
-```{r}
-avgSteps <-aggregate(steps ~ interval + whatday, lastdata, mean)
-print(head(avgSteps))
-library(lattice)
-xyplot(steps ~ interval|whatday, data = avgSteps, type = "l",layout = c(1, 2),main = "Average Steps by Interval")
-```
-This shows a difference for activity over weekends versus weekdays (it peaks at an early interval on the weekdays, and is spread out on the weekend)
